@@ -1,27 +1,27 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import Globe from 'react-globe.gl';
 import * as THREE from 'three';
 
 // Corrected Coordinates
 const REGIONS = {
-    // Silicon Valley / Oregon Area
     "US-West": { lat: 37.77, lng: -122.41, flag: "https://flagcdn.com/w40/us.png", id: "US-West" },
-    // NYC / Virginia
     "US-East": { lat: 40.71, lng: -74.00, flag: "https://flagcdn.com/w40/us.png", id: "US-East" },
-    // London / Frankfurt
     "EU-West": { lat: 51.50, lng: -0.12, flag: "https://flagcdn.com/w40/eu.png", id: "EU-West" },
-    // Tokyo
     "Asia-Pac": { lat: 35.67, lng: 139.65, flag: "https://flagcdn.com/w40/jp.png", id: "Asia-Pac" },
-    // Sao Paulo
     "SA-East": { lat: -23.55, lng: -46.63, flag: "https://flagcdn.com/w40/br.png", id: "SA-East" },
 };
+
+// --- STATIC RESOURCES (OPTIMIZATION) ---
+// Reuse Geometry and Materials instead of recreating them 60 times a second
+const RACK_GEOMETRY = new THREE.BoxGeometry(2, 6, 2);
+const EDGE_GEOMETRY = new THREE.EdgesGeometry(RACK_GEOMETRY);
+const EDGE_MATERIAL = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.4, linewidth: 2 });
 
 const MapVisualizer = ({ selectedServer, attacks = [] }) => {
     const globeEl = useRef();
     const [serverObjects, setServerObjects] = useState([]);
 
     useEffect(() => {
-        // Convert REGIONS to array for custom layer
         const servers = Object.values(REGIONS).map(r => ({
             ...r,
             isSelected: selectedServer === r.id
@@ -29,7 +29,6 @@ const MapVisualizer = ({ selectedServer, attacks = [] }) => {
         setServerObjects(servers);
     }, [selectedServer]);
 
-    // Prepare arcs data
     const arcsData = useMemo(() => {
         if (!selectedServer || !REGIONS[selectedServer]) return [];
         const target = REGIONS[selectedServer];
@@ -44,6 +43,7 @@ const MapVisualizer = ({ selectedServer, attacks = [] }) => {
         }));
     }, [attacks, selectedServer]);
 
+    // Initial Auto-rotate
     useEffect(() => {
         if (globeEl.current) {
             globeEl.current.controls().autoRotate = true;
@@ -52,12 +52,51 @@ const MapVisualizer = ({ selectedServer, attacks = [] }) => {
         }
     }, []);
 
+    // Focus on selection
     useEffect(() => {
         if (selectedServer && globeEl.current && REGIONS[selectedServer]) {
             const target = REGIONS[selectedServer];
             globeEl.current.pointOfView({ lat: target.lat, lng: target.lng, altitude: 2 }, 1000);
         }
     }, [selectedServer]);
+
+    // Extracted Object Creator (Stable function)
+    const createServerObject = useCallback((d) => {
+        // Material: Clone to allow individual color changes or use common one if not changing
+        // Since we update color in update(), we can start with a base material instance but it needs to be unique if we want different colors per instance?
+        // Actually, individual meshes need their own material if we change properties per instance, OR we use vertex colors.
+        // For simplicity, new material is safer, but Geometry is reused.
+
+        const material = new THREE.MeshLambertMaterial({
+            color: d.isSelected ? 0x00f0ff : 0x444455,
+            emissive: d.isSelected ? 0x00f0ff : 0x000000,
+            emissiveIntensity: d.isSelected ? 0.8 : 0,
+            transparent: true,
+            opacity: 0.9
+        });
+
+        const mesh = new THREE.Mesh(RACK_GEOMETRY, material);
+
+        // Add shared edges
+        const line = new THREE.LineSegments(EDGE_GEOMETRY, EDGE_MATERIAL);
+        mesh.add(line);
+
+        return mesh;
+    }, []);
+
+    // Extracted Object Updater (Stable function)
+    const updateServerObject = useCallback((obj, d) => {
+        Object.assign(obj.position, globeEl.current.getCoords(d.lat, d.lng, 0.08));
+        obj.lookAt(0, 0, 0);
+        obj.rotateX(Math.PI / 2);
+
+        const color = d.isSelected ? 0x00f0ff : 0x444455;
+        const emissive = d.isSelected ? 0x00f0ff : 0x000000;
+        obj.material.color.setHex(color);
+        obj.material.emissive.setHex(emissive);
+        obj.material.emissiveIntensity = d.isSelected ? 0.8 + Math.sin(Date.now() / 200) * 0.2 : 0; // Subtle pulse
+    }, []);
+
 
     return (
         <div className="w-full h-full bg-[#050510] relative overflow-hidden rounded-xl border border-cyber-dim shadow-[0_0_20px_rgba(0,240,255,0.1)] flex items-center justify-center">
@@ -73,56 +112,23 @@ const MapVisualizer = ({ selectedServer, attacks = [] }) => {
                 // Attack Arcs
                 arcsData={arcsData}
                 arcColor="color"
-                arcDashLength={0.9} // Longer traces
-                arcDashGap={0.1} // Shorter gaps
-                arcDashAnimateTime={1500} // Faster flow
-                arcStroke={0.7} // Thinner, sleeker lines
-                arcAltitude={0.4} // Consistent high arc
-                arcCircularResolution={64} // Smoother curves
-                // Custom 3D Objects (Server Racks)
+                arcDashLength={0.9}
+                arcDashGap={0.1}
+                arcDashAnimateTime={1500}
+                arcStroke={0.7}
+                arcAltitude={0.4}
+                arcCircularResolution={64}
+
+                // Custom 3D Objects
                 customLayerData={serverObjects}
-                customThreeObject={(d) => {
-                    // Create a "Server Rack" looking object (Tall Box) - Made Bigger
-                    const geometry = new THREE.BoxGeometry(2, 6, 2); // Bigger dimensions
+                customThreeObject={createServerObject}
+                customThreeObjectUpdate={updateServerObject}
 
-                    // Material: Black with emissive edges/properties
-                    const material = new THREE.MeshLambertMaterial({
-                        color: d.isSelected ? 0x00f0ff : 0x444455,
-                        emissive: d.isSelected ? 0x00f0ff : 0x000000,
-                        emissiveIntensity: d.isSelected ? 0.8 : 0,
-                        transparent: true,
-                        opacity: 0.9
-                    });
-
-                    const mesh = new THREE.Mesh(geometry, material);
-
-                    // Add a wireframe helper or edges to make it look "techy"
-                    const edges = new THREE.EdgesGeometry(geometry);
-                    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.4, linewidth: 2 }));
-                    mesh.add(line);
-
-                    return mesh;
-                }}
-                customThreeObjectUpdate={(obj, d) => {
-                    // Position
-                    Object.assign(obj.position, globeEl.current.getCoords(d.lat, d.lng, 0.08)); // Altitude slightly higher
-
-                    // Orientation: Make it stand perpendicular to the surface
-                    obj.lookAt(0, 0, 0); // Point Z at center
-                    obj.rotateX(Math.PI / 2); // Rotate to make Y pointing out (since Box is Y-up)
-
-                    // Pulse/Color Update
-                    const color = d.isSelected ? 0x00f0ff : 0x444455;
-                    const emissive = d.isSelected ? 0x00f0ff : 0x000000;
-                    obj.material.color.setHex(color);
-                    obj.material.emissive.setHex(emissive);
-                }}
-
-                // HTML Markers for flags (Restored)
+                // HTML Markers
                 htmlElementsData={serverObjects}
                 htmlLat="lat"
                 htmlLng="lng"
-                htmlAltitude={0.15} // Slightly higher than rack
+                htmlAltitude={0.15}
                 htmlElement={d => {
                     const el = document.createElement('div');
                     el.innerHTML = `
@@ -140,7 +146,6 @@ const MapVisualizer = ({ selectedServer, attacks = [] }) => {
                 atmosphereAltitude={0.15}
             />
 
-            {/* Vignette */}
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_20%,#050510_100%)] z-20" />
         </div>
     );

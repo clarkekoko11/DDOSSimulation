@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MapVisualizer from './components/Map/MapVisualizer';
 import ControlPanel from './components/UI/ControlPanel';
 import StatsPanel from './components/UI/StatsPanel';
@@ -9,8 +9,11 @@ function App() {
   const [selectedServer, setSelectedServer] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
   const [selectedAttackType, setSelectedAttackType] = useState('RANDOM');
-  const [attacks, setAttacks] = useState([]);
+  const [attacks, setAttacks] = useState([]); // Visual state (throttled)
   const [booting, setBooting] = useState(true);
+
+  // Buffer for high-frequency simulation
+  const attacksBuffer = useRef([]);
 
   // Attack Configuration
   const ATTACK_TYPES = [
@@ -20,11 +23,11 @@ function App() {
     { type: 'DATA_EXFIL', color: '#ae00ff' }
   ];
 
-  // Attack Generation Logic
+  // 1. Simulation Loop (High Frequency, Updates Ref only)
   useEffect(() => {
-    let interval;
+    let simInterval;
     if (isAttacking && selectedServer) {
-      interval = setInterval(() => {
+      simInterval = setInterval(() => {
         const id = Math.random().toString(36).substr(2, 9);
         const randomSource = [
           (Math.random() * 360) - 180,
@@ -46,19 +49,41 @@ function App() {
           color: attackConfig.color
         };
 
-        // Optimized: Batch Add + Cleanup in one state update to reduce re-renders
-        setAttacks(prev => {
-          const now = Date.now();
-          const active = prev.filter(a => now - a.createdAt < 2000); // Remove old
-          return [...active, newAttack]; // Add new
-        });
+        // Directly mutate buffer (very fast)
+        attacksBuffer.current.push(newAttack);
 
-      }, 50);
+        // Cleanup old attacks in buffer
+        const now = Date.now();
+        // Simple filter (optimization: could use index to slice, but filter is okay for <1000 items)
+        if (attacksBuffer.current.length > 200) { // Safety cap
+          attacksBuffer.current = attacksBuffer.current.filter(a => now - a.createdAt < 2000);
+        }
+
+      }, 50); // Run at 20Hz
+    } else {
+      attacksBuffer.current = [];
+    }
+    return () => clearInterval(simInterval);
+  }, [isAttacking, selectedServer, selectedAttackType]);
+
+  // 2. Render Loop (Lower Frequency, Syncs Ref to State)
+  useEffect(() => {
+    let renderInterval;
+    if (isAttacking) {
+      renderInterval = setInterval(() => {
+        // Only update state if buffer has content
+        // Using slice to create a new array ref for React
+        const now = Date.now();
+        // Final cleanup before render
+        attacksBuffer.current = attacksBuffer.current.filter(a => now - a.createdAt < 2000);
+        setAttacks([...attacksBuffer.current]);
+      }, 100); // 10Hz Render (Smooth enough for dots, easy on CPU)
     } else {
       setAttacks([]);
     }
-    return () => clearInterval(interval);
-  }, [isAttacking, selectedServer, selectedAttackType]);
+    return () => clearInterval(renderInterval);
+  }, [isAttacking]);
+
 
   return (
     <div className="bg-grid-pattern h-screen w-screen overflow-hidden bg-[#050510] flex relative">
@@ -96,6 +121,7 @@ function App() {
             boxShadow: '0 0 50px rgba(0,0,0,0.8) inset'
           }}
         >
+          {/* Memoizing props or component here relies on 'attacks' updating less frequently */}
           <MapVisualizer selectedServer={selectedServer} attacks={attacks} />
         </div>
       </div>

@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import MapVisualizer from './components/Map/MapVisualizer';
 import ControlPanel from './components/UI/ControlPanel';
 import StatsPanel from './components/UI/StatsPanel';
+import BootScreen from './components/UI/BootScreen';
 
 function App() {
   const [selectedServer, setSelectedServer] = useState(null);
   const [isAttacking, setIsAttacking] = useState(false);
+  const [selectedAttackType, setSelectedAttackType] = useState('RANDOM');
   const [attacks, setAttacks] = useState([]);
+  const [booting, setBooting] = useState(true);
 
   // Attack Configuration
   const ATTACK_TYPES = [
@@ -28,8 +31,13 @@ function App() {
           (Math.random() * 140) - 70   // Latitude (avoid extremes)
         ];
 
-        // Random Attack Type
-        const attackConfig = ATTACK_TYPES[Math.floor(Math.random() * ATTACK_TYPES.length)];
+        // Determine Attack Type
+        let attackConfig;
+        if (selectedAttackType === 'RANDOM') {
+          attackConfig = ATTACK_TYPES[Math.floor(Math.random() * ATTACK_TYPES.length)];
+        } else {
+          attackConfig = ATTACK_TYPES.find(a => a.type === selectedAttackType) || ATTACK_TYPES[0];
+        }
 
         const newAttack = {
           id,
@@ -52,15 +60,17 @@ function App() {
       setAttacks([]);
     }
     return () => clearInterval(interval);
-  }, [isAttacking, selectedServer]);
+  }, [isAttacking, selectedServer, selectedAttackType]);
 
   return (
     <div className="bg-grid-pattern" style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden', backgroundColor: '#050510' }}>
 
+      {booting && <BootScreen onComplete={() => setBooting(false)} />}
+
       <div className="scanlines" />
 
       {/* Layer 1: Map (Background) */}
-      <div style={{ position: 'absolute', inset: '40px', zIndex: 0, padding: '20px' }}> {/* Inset 40px for "padding style" */}
+      <div style={{ position: 'absolute', inset: '40px', zIndex: 0, padding: '20px', transition: 'all 1s ease', opacity: booting ? 0 : 1 }}> {/* Fade in map */}
         <div style={{
           width: '100%',
           height: '100%',
@@ -75,7 +85,7 @@ function App() {
       </div>
 
       {/* Layer 2: UI (Foreground) */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 100, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', inset: 0, zIndex: 100, pointerEvents: 'none', opacity: booting ? 0 : 1, transition: 'opacity 1s ease 0.5s' }}>
 
         {/* Top Left: Control Panel */}
         <div style={{ pointerEvents: 'auto' }}>
@@ -84,6 +94,9 @@ function App() {
             onSelectServer={setSelectedServer}
             onToggleAttack={() => setIsAttacking(!isAttacking)}
             isAttacking={isAttacking}
+            selectedAttackType={selectedAttackType}
+            onSelectAttackType={setSelectedAttackType}
+            attackTypes={ATTACK_TYPES}
           />
         </div>
 

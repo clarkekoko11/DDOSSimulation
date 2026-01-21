@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Activity, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Activity, Zap, TrendingUp, AlertTriangle, GripHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const StatsPanel = ({ isAttacking, attacks = [] }) => {
     const [stats, setStats] = useState({
@@ -7,8 +8,9 @@ const StatsPanel = ({ isAttacking, attacks = [] }) => {
         requests: 0,
         packets: 0,
     });
+    const [isMinimized, setIsMinimized] = useState(false);
+    const [isPinned, setIsPinned] = useState(true);
 
-    // Calculate breakdown from active attacks for visual feedback
     const breakdown = useMemo(() => {
         const counts = { 'UDP_FLOOD': 0, 'SQL_INJECTION': 0, 'HTTP_POST': 0, 'DATA_EXFIL': 0 };
         attacks.forEach(a => {
@@ -40,58 +42,106 @@ const StatsPanel = ({ isAttacking, attacks = [] }) => {
     }, [isAttacking]);
 
     return (
-        <div
-            className="absolute bottom-4 right-4 z-50 w-96 p-4 rounded-lg flex flex-col gap-4 shadow-2xl"
-            style={{
-                backgroundColor: 'rgba(10, 10, 20, 0.9)',
-                border: '1px solid rgba(0, 240, 255, 0.3)',
-                backdropFilter: 'blur(10px)',
-                bottom: '20px',
-                right: '20px'
-            }}
+        <motion.div
+            drag={!isPinned}
+            dragMomentum={false}
+            dragConstraints={{ left: -window.innerWidth + 400, top: -window.innerHeight + 100, right: 0, bottom: 0 }}
+            className={`absolute bottom-8 right-8 z-50 w-96 rounded-xl overflow-hidden cyber-panel transition-all duration-300 ${!isPinned ? 'cursor-move ring-1 ring-cyber-cyan/50 shadow-[0_0_30px_rgba(0,240,255,0.3)]' : ''}`}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
         >
-            <StatRow icon={Zap} label="Bandwidth" value={stats.bandwidth.toFixed(2)} unit="Gbps" color="#00f0ff" />
-            <StatRow icon={Activity} label="Requests" value={Math.floor(stats.requests).toLocaleString()} unit="req/s" color="#39ff14" />
-            <StatRow icon={TrendingUp} label="Packet Flow" value={Math.floor(stats.packets).toLocaleString()} unit="pps" color="#ff003c" />
+            {/* Header */}
+            <div
+                className={`p-4 flex items-center justify-between border-b border-cyber-dim/30 bg-black/20 group select-none ${!isPinned ? 'cursor-move' : ''}`}
+                style={{ borderColor: 'rgba(0, 240, 255, 0.1)' }}
+            >
+                <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                    <Activity size={14} className="text-cyber-cyan" style={{ color: '#00f0ff' }} />
+                    Live Metrics
+                </div>
+                <div className="flex items-center gap-3">
+                    {/* Pin Toggle */}
+                    <button
+                        onClick={() => setIsPinned(!isPinned)}
+                        className={`transition-all duration-300 p-1.5 rounded-full hover:bg-white/10 ${isPinned ? 'text-cyber-cyan' : 'text-gray-500'}`}
+                        title={isPinned ? "Unpin to drag" : "Pin position"}
+                    >
+                        <div className={`w-2 h-2 rounded-full transition-all duration-300 ${isPinned ? 'bg-cyber-cyan shadow-[0_0_8px_#00f0ff]' : 'border border-gray-500 bg-transparent'}`} />
+                    </button>
 
-            {/* Attack Methods Breakdown */}
-            <div className="border-t pt-2" style={{ borderColor: 'rgba(42, 42, 53, 0.5)' }}>
-                <h4 className="text-xs font-mono uppercase mb-2 text-gray-500">Attack Vectors</h4>
-                <div className="grid grid-cols-2 gap-2">
-                    <MethodBadge label="UDP" count={breakdown['UDP_FLOOD']} color="#ff003c" />
-                    <MethodBadge label="SQLi" count={breakdown['SQL_INJECTION']} color="#ffee00" />
-                    <MethodBadge label="HTTP" count={breakdown['HTTP_POST']} color="#00f0ff" />
-                    <MethodBadge label="DATA" count={breakdown['DATA_EXFIL']} color="#ae00ff" />
+                    {isAttacking && (
+                        <span className="flex h-2 w-2 relative mr-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        </span>
+                    )}
+                    {!isPinned && <GripHorizontal size={16} className="text-gray-400 group-hover:text-cyber-cyan transition-colors" />}
+                    <button
+                        onClick={() => setIsMinimized(!isMinimized)}
+                        className="text-gray-400 hover:text-white transition-colors"
+                        onPointerDownCapture={e => e.stopPropagation()}
+                    >
+                        {isMinimized ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
                 </div>
             </div>
 
-            {isAttacking && (
-                <div className="mt-2 border-t pt-2 flex items-center justify-between animate-pulse" style={{ borderColor: 'rgba(255, 0, 60, 0.3)' }}>
-                    <span className="font-mono text-xs uppercase" style={{ color: '#ff003c' }}>Target Status:</span>
-                    <span className="font-bold font-mono tracking-widest text-sm flex items-center gap-2" style={{ color: '#ff003c' }}>
-                        <AlertTriangle size={14} /> CRITICAL
-                    </span>
-                </div>
-            )}
-        </div>
+            <AnimatePresence>
+                {!isMinimized && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    >
+                        <div className="p-6 space-y-4">
+                            <StatRow icon={Zap} label="Bandwidth" value={stats.bandwidth.toFixed(2)} unit="Gbps" color="#00f0ff" />
+                            <StatRow icon={Activity} label="Requests" value={Math.floor(stats.requests).toLocaleString()} unit="req/s" color="#39ff14" />
+                            <StatRow icon={TrendingUp} label="Packet Flow" value={Math.floor(stats.packets).toLocaleString()} unit="pps" color="#ff003c" />
+
+                            {/* Attack Methods Breakdown */}
+                            <div className="border-t pt-4 mt-2" style={{ borderColor: 'rgba(0, 240, 255, 0.1)' }}>
+                                <h4 className="text-[10px] font-mono uppercase mb-3 text-gray-500 tracking-widest">Attack Vectors</h4>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <MethodBadge label="UDP" count={breakdown['UDP_FLOOD']} color="#ff003c" />
+                                    <MethodBadge label="SQLi" count={breakdown['SQL_INJECTION']} color="#ffee00" />
+                                    <MethodBadge label="HTTP" count={breakdown['HTTP_POST']} color="#00f0ff" />
+                                    <MethodBadge label="DATA" count={breakdown['DATA_EXFIL']} color="#ae00ff" />
+                                </div>
+                            </div>
+
+                            {isAttacking && (
+                                <div className="mt-2 border-t pt-3 flex items-center justify-between animate-pulse" style={{ borderColor: 'rgba(255, 0, 60, 0.3)' }}>
+                                    <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: '#ff003c' }}>Target Status:</span>
+                                    <span className="font-bold font-mono tracking-widest text-sm flex items-center gap-2" style={{ color: '#ff003c' }}>
+                                        <AlertTriangle size={14} /> CRITICAL
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
     );
 };
 
 const MethodBadge = ({ label, count, color }) => (
-    <div className="flex justify-between items-center text-xs font-mono p-1 rounded" style={{ backgroundColor: `${color}10`, border: `1px solid ${color}30` }}>
-        <span style={{ color }}>{label}</span>
-        <span className="font-bold text-gray-300">{count}</span>
+    <div className="flex justify-between items-center text-xs font-mono p-2 rounded bg-black/40 border border-white/5 relative overflow-hidden group hover:border-white/20 transition-colors">
+        <div className="absolute left-0 top-0 bottom-0 w-[2px]" style={{ backgroundColor: color }} />
+        <span style={{ color }} className="ml-2 font-bold opacity-90">{label}</span>
+        <span className="font-mono text-gray-300">{count}</span>
     </div>
 );
 
 const StatRow = ({ icon: Icon, label, value, unit, color }) => (
-    <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: 'rgba(42, 42, 53, 0.5)' }}>
-        <div className="flex items-center gap-2 text-gray-400">
+    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+        <div className="flex items-center gap-3 text-gray-400">
             <Icon size={16} />
-            <span className="text-xs font-mono uppercase">{label}</span>
+            <span className="text-[10px] font-mono uppercase tracking-widest">{label}</span>
         </div>
-        <div className="font-mono font-bold text-lg" style={{ color }}>
-            {value} <span className="text-xs opacity-70">{unit}</span>
+        <div className="font-mono font-bold text-lg" style={{ color, textShadow: `0 0 10px ${color}40` }}>
+            {value} <span className="text-xs opacity-50 ml-1">{unit}</span>
         </div>
     </div>
 );

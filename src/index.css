@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   background-color: #050510;
@@ -10,12 +8,10 @@
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
-  /* Setup in index.html later or assume system font */
   overflow: hidden;
-  /* Prevent scroll */
 }
 
-/* Custom Scrollbar just in case */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -52,4 +48,76 @@ body {
   bottom: 0;
   pointer-events: none;
   z-index: 999;
+}
+
+/* --- CYBER UI UTILITIES --- */
+
+/* Glassmorphic Panel */
+.cyber-panel {
+  background-color: rgba(10, 10, 20, 0.85);
+  /* Slightly more transparent */
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Cyber Button Base */
+.cyber-button {
+  @apply font-mono uppercase tracking-widest text-xs font-bold transition-all duration-300 relative overflow-hidden;
+  background: rgba(0, 240, 255, 0.05);
+  /* Very subtle fill */
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #00f0ff;
+  clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+  /* Angled corners */
+}
+
+/* Hover State */
+.cyber-button:hover:not(:disabled) {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00f0ff;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+  text-shadow: 0 0 5px rgba(0, 240, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+/* Active / Selected State */
+.cyber-button.active {
+  background: #00f0ff;
+  color: #000;
+  border-color: #00f0ff;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+}
+
+/* Danger Button (Red) */
+.cyber-button.danger {
+  color: #ff003c;
+  border-color: rgba(255, 0, 60, 0.3);
+  background: rgba(255, 0, 60, 0.05);
+}
+
+.cyber-button.danger:hover:not(:disabled) {
+  border-color: #ff003c;
+  background: rgba(255, 0, 60, 0.2);
+  box-shadow: 0 0 15px rgba(255, 0, 60, 0.4);
+  text-shadow: 0 0 5px rgba(255, 0, 60, 0.8);
+}
+
+.cyber-button.danger.active {
+  background: #ff003c;
+  color: #000;
+  border-color: #ff003c;
+  box-shadow: 0 0 20px rgba(255, 0, 60, 0.6);
+}
+
+/* Disabled State */
+.cyber-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+}
+
+/* Text Glow Utility */
+.text-glow {
+  text-shadow: 0 0 8px currentColor;
 }

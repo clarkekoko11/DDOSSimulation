@@ -34,7 +34,7 @@ const ControlPanel = ({
             >
                 <div className="flex items-center gap-3">
                     <Shield className="text-cyber-cyan drop-shadow-[0_0_5px_rgba(0,240,255,0.8)]" size={20} style={{ color: '#00f0ff' }} />
-                    <h2 className="text-lg font-bold tracking-wider font-mono text-white text-glow">LOIC_V3</h2>
+                    <h2 className="text-lg font-bold tracking-wider font-mono text-white text-glow">L.O.G.I.C</h2>
                 </div>
                 <div className="flex items-center gap-3">
                     <button

@@ -1,16 +1,57 @@
-# React + Vite
+# L.O.G.I.C (Layered Overload Generation & Impact Control)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**L.O.G.I.C** is an advanced, interactive DDoS simulation and visualization tool designed for educational purposes. It demonstrates the dynamics of network attacks, defense mechanisms, and traffic patterns in a visually immersive cyberpunk environment.
 
-Currently, two official plugins are available:
+![Project Preview](public/preview.png)
+*(Note: Add a screenshot of the dashboard here)*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+- **Real-Time Attack Simulation**: Visualize various attack vectors including UDP Floods, SQL Injection, HTTP POST, and Data Exfiltration.
+- **Interactive Global Map**: 3D Globe visualization showing attack sources and targets with region-specific flags.
+- **Defense Mechanisms**:
+  - **Rate Limiting**: Mitigate volumetric floods.
+  - **WAF (Web Application Firewall)**: Filter malicious payloads.
+  - **Anycast Network**: Distribute load across global nodes.
+  - **Blackhole Routing**: Emergency traffic null-routing.
+- **Packet Inspector**: Live "sniffer" terminal showing simulated packet headers and traffic content.
+- **Live Statistics**: Real-time monitoring of bandwidth, requests per second, and packet flow.
+- **Educational Mode**: Learn about different attack types and how to defend against them.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Technology Stack
 
-## Expanding the ESLint configuration
+- **Core**: React 18, Vite
+- **Styling**: TailwindCSS, Vanilla CSS (Cyberpunk Theme)
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Geo-Visualization**: D3-geo (simulated) / Custom SVG mapping
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📦 Installation & Setup
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/yourusername/logic-ddos-sim.git
+    cd logic-ddos-sim
+    ```
+
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
+
+3.  **Start the development server**
+    ```bash
+    npm run dev
+    ```
+
+4.  **Open the application**
+    The app will be available at `http://localhost:5173` (or the port shown in your terminal).
+
+## 👨‍💻 Credits
+
+**Developed by Clarke Serrano**
+
+Created as a visual demonstration of network security concepts and frontend engineering capabilities.
+
+---
+*Disclaimer: This tool is a **simulation only**. No actual network packets are sent to external targets. It is a frontend visualization and is completely safe to run.*

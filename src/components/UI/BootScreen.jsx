@@ -24,13 +24,13 @@ const BootScreen = ({ onComplete }) => {
     // Boot Sequence Timer
     useEffect(() => {
         const sequence = [
-            setTimeout(() => setStep(1), 800),   // BIOS
-            setTimeout(() => setStep(2), 1600),  // Kernel
-            setTimeout(() => setStep(3), 2400),  // Network
-            setTimeout(() => setStep(4), 3200),  // Security
-            setTimeout(() => setStep(5), 4000),  // Title Glitch
-            setTimeout(() => setStep(6), 5500),  // Complete
-            setTimeout(onComplete, 6000)
+            setTimeout(() => setStep(1), 1000),   // BIOS
+            setTimeout(() => setStep(2), 2500),  // Kernel
+            setTimeout(() => setStep(3), 4000),  // Network
+            setTimeout(() => setStep(4), 5500),  // Security
+            setTimeout(() => setStep(5), 7500),  // Title Glitch
+            setTimeout(() => setStep(6), 10500), // Hold
+            setTimeout(onComplete, 12000)
         ];
         return () => sequence.forEach(clearTimeout);
     }, [onComplete]);
@@ -58,7 +58,7 @@ const BootScreen = ({ onComplete }) => {
         <motion.div
             className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden"
             exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 2.0, ease: "easeInOut" }}
         >
             {/* Background Matrix Rain */}
             <div className="absolute inset-0 opacity-10 pointer-events-none select-none overflow-hidden">

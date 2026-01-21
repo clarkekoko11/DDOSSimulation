@@ -43,7 +43,7 @@ const InfoPanel = ({ selectedAttackType }) => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="w-full cyber-panel rounded-xl overflow-hidden mt-4"
+            className="w-full cyber-panel rounded-xl overflow-hidden mt-4 shrink-0"
         >
             <div className="p-4 border-b border-cyber-dim/30 bg-black/20 flex items-center gap-2">
                 <Info size={16} className="text-cyber-accent" />

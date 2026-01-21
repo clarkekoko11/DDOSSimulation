@@ -23,7 +23,7 @@ const ControlPanel = ({
 
     return (
         <motion.div
-            className="z-50 w-full rounded-xl overflow-hidden cyber-panel transition-all duration-300 relative mb-4"
+            className="z-50 w-full rounded-xl overflow-hidden cyber-panel transition-all duration-300 relative mb-4 shrink-0"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0, width: '100%' }}
         >
@@ -55,30 +55,30 @@ const ControlPanel = ({
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                     >
-                        <div className="p-6 pt-4 space-y-6">
+                        <div className="p-3 pt-2 space-y-3">
 
                             {/* Server Selection */}
                             <div>
                                 <label className="block text-[10px] font-mono mb-3 uppercase tracking-[0.2em] text-cyber-cyan/70" style={{ color: '#00f0ff' }}>Target Server</label>
-                                <div className="space-y-2">
+                                <div className="space-y-1 max-h-[150px] overflow-y-auto custom-scrollbar pr-1">
                                     {SERVER_LIST.map(server => (
                                         <button
                                             key={server.id}
                                             onClick={() => onSelectServer(server.id)}
                                             className={`
-                                                w-full px-4 py-3 flex items-center justify-between
-                                                font-mono text-sm transition-all duration-300
+                                                w-full px-3 py-2 flex items-center justify-between
+                                                font-mono text-xs transition-all duration-300
                                                 border border-transparent hover:border-cyber-cyan/30 hover:bg-white/5
-                                                rounded-md
-                                                ${selectedServer === server.id ? 'bg-cyber-cyan/10 border-cyber-cyan text-cyber-cyan shadow-[0_0_15px_rgba(0,240,255,0.15)]' : 'text-gray-400'}
+                                                rounded-sm
+                                                ${selectedServer === server.id ? 'bg-cyber-cyan/10 border-cyber-cyan text-cyber-cyan shadow-[0_0_10px_rgba(0,240,255,0.1)]' : 'text-gray-400'}
                                             `}
                                             style={{ borderColor: selectedServer === server.id ? '#00f0ff' : 'transparent' }}
                                         >
-                                            <span className="flex items-center gap-3">
-                                                <img src={server.flag} alt="flag" className="w-5 h-auto rounded opacity-80" />
+                                            <span className="flex items-center gap-2">
+                                                <img src={server.flag} alt="flag" className="w-4 h-auto rounded opacity-80" />
                                                 <span className="tracking-wide">{server.name}</span>
                                             </span>
-                                            {selectedServer === server.id && <span className="animate-pulse text-cyber-cyan">●</span>}
+                                            {selectedServer === server.id && <span className="animate-pulse text-cyber-cyan text-[10px]">●</span>}
                                         </button>
                                     ))}
                                 </div>
@@ -111,9 +111,9 @@ const ControlPanel = ({
                             <button
                                 onClick={onToggleAttack}
                                 disabled={!selectedServer}
-                                className={`cyber-button danger w-full py-4 text-sm ${isAttacking ? 'active' : ''}`}
+                                className={`cyber-button danger w-full py-2 text-xs ${isAttacking ? 'active' : ''}`}
                             >
-                                {isAttacking ? 'Stop Attack' : 'Initiate Attack'}
+                                {isAttacking ? 'STOP' : 'INITIATE ATTACK'}
                             </button>
                         </div>
                     </motion.div>

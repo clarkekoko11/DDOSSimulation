@@ -4,6 +4,9 @@ import ControlPanel from './components/UI/ControlPanel';
 import StatsPanel from './components/UI/StatsPanel';
 import InfoPanel from './components/UI/InfoPanel';
 import BootScreen from './components/UI/BootScreen';
+import DefensePanel from './components/UI/DefensePanel';
+import PacketInspector from './components/UI/PacketInspector';
+import { Terminal } from 'lucide-react';
 
 function App() {
   const [selectedServer, setSelectedServer] = useState(null);
@@ -11,6 +14,10 @@ function App() {
   const [selectedAttackType, setSelectedAttackType] = useState('RANDOM');
   const [attacks, setAttacks] = useState([]); // Visual state (throttled)
   const [booting, setBooting] = useState(true);
+
+  // Educational State
+  const [activeDefenses, setActiveDefenses] = useState([]);
+  const [showPacketInspector, setShowPacketInspector] = useState(false);
 
   // Buffer for high-frequency simulation
   const attacksBuffer = useRef([]);
@@ -23,11 +30,33 @@ function App() {
     { type: 'DATA_EXFIL', color: '#ae00ff' }
   ];
 
+  // Defense Handlers
+  const toggleDefense = (id) => {
+    setActiveDefenses(prev =>
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
+  };
+
   // 1. Simulation Loop (High Frequency, Updates Ref only)
   useEffect(() => {
     let simInterval;
     if (isAttacking && selectedServer) {
       simInterval = setInterval(() => {
+        // DEFENSE LOGIC: Filter traffic based on active defenses
+        if (activeDefenses.includes('BLACKHOLE')) return; // Drop all
+
+        // Effect chance of blocking
+        let dropChance = 0;
+        if (activeDefenses.includes('RATE_LIMIT')) dropChance += 0.3; // 30% drop
+        if (activeDefenses.includes('ANYCAST')) dropChance += 0.2; // 20% drop
+
+        // WAF specifically hurts SQL_INJECTION and HTTP_POST
+        if (activeDefenses.includes('WAF') && (selectedAttackType === 'SQL_INJECTION' || selectedAttackType === 'HTTP_POST' || selectedAttackType === 'RANDOM')) {
+          dropChance += 0.4;
+        }
+
+        if (Math.random() < dropChance) return; // Mitigation successful
+
         const id = Math.random().toString(36).substr(2, 9);
         const randomSource = [
           (Math.random() * 360) - 180,
@@ -54,7 +83,6 @@ function App() {
 
         // Cleanup old attacks in buffer
         const now = Date.now();
-        // Simple filter (optimization: could use index to slice, but filter is okay for <1000 items)
         if (attacksBuffer.current.length > 200) { // Safety cap
           attacksBuffer.current = attacksBuffer.current.filter(a => now - a.createdAt < 2000);
         }
@@ -64,20 +92,17 @@ function App() {
       attacksBuffer.current = [];
     }
     return () => clearInterval(simInterval);
-  }, [isAttacking, selectedServer, selectedAttackType]);
+  }, [isAttacking, selectedServer, selectedAttackType, activeDefenses]); // Add activeDefenses dependency
 
   // 2. Render Loop (Lower Frequency, Syncs Ref to State)
   useEffect(() => {
     let renderInterval;
     if (isAttacking) {
       renderInterval = setInterval(() => {
-        // Only update state if buffer has content
-        // Using slice to create a new array ref for React
         const now = Date.now();
-        // Final cleanup before render
         attacksBuffer.current = attacksBuffer.current.filter(a => now - a.createdAt < 2000);
         setAttacks([...attacksBuffer.current]);
-      }, 100); // 10Hz Render (Smooth enough for dots, easy on CPU)
+      }, 100);
     } else {
       setAttacks([]);
     }
@@ -93,7 +118,7 @@ function App() {
 
       {/* --- LEFT SIDEBAR (Controls) --- */}
       <div
-        className="h-full z-20 w-[360px] border-r border-cyber-dim/30 bg-black/20 backdrop-blur-sm flex flex-col p-4 pt-8 gap-4"
+        className="h-full z-20 w-[360px] border-r border-cyber-dim/30 bg-black/20 backdrop-blur-sm flex flex-col p-4 pt-8 gap-4 overflow-y-auto custom-scrollbar"
       >
         <ControlPanel
           selectedServer={selectedServer}
@@ -103,6 +128,10 @@ function App() {
           selectedAttackType={selectedAttackType}
           onSelectAttackType={setSelectedAttackType}
           attackTypes={ATTACK_TYPES}
+        />
+        <DefensePanel
+          activeDefenses={activeDefenses}
+          onToggleDefense={toggleDefense}
         />
       </div>
 
@@ -121,18 +150,36 @@ function App() {
             boxShadow: '0 0 50px rgba(0,0,0,0.8) inset'
           }}
         >
-          {/* Memoizing props or component here relies on 'attacks' updating less frequently */}
           <MapVisualizer selectedServer={selectedServer} attacks={attacks} />
         </div>
+
+        {/* Packet Inspector Toggle (Bottom Floating) */}
+        {!booting && (
+          <button
+            onClick={() => setShowPacketInspector(!showPacketInspector)}
+            className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 rounded-full border border-cyber-dim/50 bg-black/80 text-cyber-cyan font-mono text-xs uppercase tracking-widest hover:bg-cyber-cyan/10 transition-all ${showPacketInspector ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+          >
+            <Terminal size={14} />
+            Open Packet Sniffer
+          </button>
+        )}
       </div>
 
       {/* --- RIGHT SIDEBAR (Info & Stats) --- */}
       <div
-        className="h-full z-20 w-[400px] border-l border-cyber-dim/30 bg-black/20 backdrop-blur-sm flex flex-col p-4 pt-8 gap-4"
+        className="h-full z-20 w-[400px] border-l border-cyber-dim/30 bg-black/20 backdrop-blur-sm flex flex-col p-4 pt-8 gap-4 overflow-y-auto custom-scrollbar"
       >
-        <StatsPanel isAttacking={isAttacking} attacks={attacks} />
+        <StatsPanel isAttacking={isAttacking} attacks={attacks} activeDefenses={activeDefenses} />
         <InfoPanel selectedAttackType={selectedAttackType} />
       </div>
+
+      <PacketInspector
+        isVisible={showPacketInspector}
+        onClose={() => setShowPacketInspector(false)}
+        attackType={selectedAttackType}
+        isAttacking={isAttacking}
+        activeDefenses={activeDefenses}
+      />
 
     </div>
   );

@@ -10,18 +10,32 @@ const SERVER_LIST = [
     { id: "SA-East", flag: "https://flagcdn.com/w40/br.png", name: "SA-East" },
 ];
 
-const ControlPanel = ({ selectedServer, onSelectServer, onToggleAttack, isAttacking, selectedAttackType, onSelectAttackType, attackTypes }) => {
+const ControlPanel = ({
+    selectedServer,
+    onSelectServer,
+    onToggleAttack,
+    isAttacking,
+    selectedAttackType,
+    onSelectAttackType,
+    attackTypes,
+    isPinned,       // New prop
+    onTogglePin     // New prop
+}) => {
     const [isMinimized, setIsMinimized] = useState(false);
-    const [isPinned, setIsPinned] = useState(true);
+    // Removed internal isPinned state
 
     return (
         <motion.div
-            drag={!isPinned}
+            drag={!isPinned} // Only drag if NOT pinned
             dragMomentum={false}
-            dragConstraints={{ left: 0, top: 0, right: window.innerWidth - 320, bottom: window.innerHeight - 100 }} // Basic constraints
-            className={`absolute top-8 left-8 z-50 w-80 rounded-xl overflow-hidden cyber-panel transition-all duration-300 ${!isPinned ? 'cursor-move ring-1 ring-cyber-cyan/50 shadow-[0_0_30px_rgba(0,240,255,0.3)]' : ''}`}
+            // Remove hard constraints when unpinned to allow free movement, or update them
+            dragConstraints={!isPinned ? { left: 0, top: 0, right: window.innerWidth - 320, bottom: window.innerHeight - 100 } : undefined}
+            className={`
+                z-50 w-full rounded-xl overflow-hidden cyber-panel transition-all duration-300 
+                ${isPinned ? 'relative mb-4' : 'absolute top-8 left-8 cursor-move ring-1 ring-cyber-cyan/50 shadow-[0_0_30px_rgba(0,240,255,0.3)]'}
+            `}
             initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0, width: '100%' }} // Ensure consistent width
         >
             {/* Header */}
             <div
@@ -35,7 +49,7 @@ const ControlPanel = ({ selectedServer, onSelectServer, onToggleAttack, isAttack
                 <div className="flex items-center gap-3">
                     {/* Pin Toggle */}
                     <button
-                        onClick={() => setIsPinned(!isPinned)}
+                        onClick={onTogglePin}
                         className={`transition-all duration-300 p-1.5 rounded-full hover:bg-white/10 ${isPinned ? 'text-cyber-cyan' : 'text-gray-500'}`}
                         title={isPinned ? "Unpin to drag" : "Pin position"}
                     >

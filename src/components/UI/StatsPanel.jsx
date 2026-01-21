@@ -2,15 +2,19 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Activity, Zap, TrendingUp, AlertTriangle, GripHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const StatsPanel = ({ isAttacking, attacks = [] }) => {
+const StatsPanel = ({
+    isAttacking,
+    attacks = [],
+    isPinned,       // New prop
+    onTogglePin     // New prop
+}) => {
     const [stats, setStats] = useState({
         bandwidth: 0,
         requests: 0,
         packets: 0,
     });
     const [isMinimized, setIsMinimized] = useState(false);
-    const [isPinned, setIsPinned] = useState(true);
-
+    // Removed internal isPinned state
     const breakdown = useMemo(() => {
         const counts = { 'UDP_FLOOD': 0, 'SQL_INJECTION': 0, 'HTTP_POST': 0, 'DATA_EXFIL': 0 };
         attacks.forEach(a => {
@@ -45,10 +49,13 @@ const StatsPanel = ({ isAttacking, attacks = [] }) => {
         <motion.div
             drag={!isPinned}
             dragMomentum={false}
-            dragConstraints={{ left: -window.innerWidth + 400, top: -window.innerHeight + 100, right: 0, bottom: 0 }}
-            className={`absolute bottom-8 right-8 z-50 w-96 rounded-xl overflow-hidden cyber-panel transition-all duration-300 ${!isPinned ? 'cursor-move ring-1 ring-cyber-cyan/50 shadow-[0_0_30px_rgba(0,240,255,0.3)]' : ''}`}
+            dragConstraints={!isPinned ? { left: 0, top: 0, right: window.innerWidth - 320, bottom: window.innerHeight - 100 } : undefined}
+            className={`
+                z-50 w-full rounded-xl overflow-hidden cyber-panel transition-all duration-300 
+                ${isPinned ? 'relative mb-4' : 'absolute bottom-8 right-8 cursor-move ring-1 ring-cyber-cyan/50 shadow-[0_0_30px_rgba(0,240,255,0.3)]'}
+            `}
             initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{ opacity: 1, x: 0, width: '100%' }}
         >
             {/* Header */}
             <div
@@ -62,7 +69,7 @@ const StatsPanel = ({ isAttacking, attacks = [] }) => {
                 <div className="flex items-center gap-3">
                     {/* Pin Toggle */}
                     <button
-                        onClick={() => setIsPinned(!isPinned)}
+                        onClick={onTogglePin}
                         className={`transition-all duration-300 p-1.5 rounded-full hover:bg-white/10 ${isPinned ? 'text-cyber-cyan' : 'text-gray-500'}`}
                         title={isPinned ? "Unpin to drag" : "Pin position"}
                     >

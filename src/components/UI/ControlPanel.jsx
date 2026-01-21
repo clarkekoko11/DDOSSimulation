@@ -1,7 +1,13 @@
 import React from 'react';
 import { Shield } from 'lucide-react';
 
-const SERVERS = ["US-East", "US-West", "EU-West", "Asia-Pac", "SA-East"];
+const SERVER_LIST = [
+    { id: "US-East", flag: "🇺🇸", name: "US-East" },
+    { id: "US-West", flag: "🇺🇸", name: "US-West" },
+    { id: "EU-West", flag: "🇪🇺", name: "EU-West" },
+    { id: "Asia-Pac", flag: "🇯🇵", name: "Asia-Pac" },
+    { id: "SA-East", flag: "🇧🇷", name: "SA-East" },
+];
 
 const ControlPanel = ({ selectedServer, onSelectServer, onToggleAttack, isAttacking }) => {
     return (
@@ -23,23 +29,26 @@ const ControlPanel = ({ selectedServer, onSelectServer, onToggleAttack, isAttack
             <div className="mb-6">
                 <label className="block text-xs font-mono mb-2 uppercase tracking-widest" style={{ color: '#00f0ff' }}>Target Server</label>
                 <div className="grid grid-cols-1 gap-2">
-                    {SERVERS.map(server => (
+                    {SERVER_LIST.map(server => (
                         <button
-                            key={server}
-                            onClick={() => onSelectServer(server)}
+                            key={server.id}
+                            onClick={() => onSelectServer(server.id)}
                             style={{
-                                backgroundColor: selectedServer === server ? 'rgba(0, 240, 255, 0.1)' : 'transparent',
-                                borderColor: selectedServer === server ? '#00f0ff' : '#2a2a35',
-                                color: selectedServer === server ? '#00f0ff' : '#889',
+                                backgroundColor: selectedServer === server.id ? 'rgba(0, 240, 255, 0.1)' : 'transparent',
+                                borderColor: selectedServer === server.id ? '#00f0ff' : '#2a2a35',
+                                color: selectedServer === server.id ? '#00f0ff' : '#889',
                                 border: '1px solid'
                             }}
                             className={`
-                                px-4 py-3 text-left font-mono text-sm transition-all duration-300
-                                ${selectedServer === server ? 'shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'hover:border-cyan-500/50 hover:text-cyan-400'}
+                                px-4 py-3 text-left font-mono text-sm transition-all duration-300 flex justify-between items-center
+                                ${selectedServer === server.id ? 'shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'hover:border-cyan-500/50 hover:text-cyan-400'}
                             `}
                         >
-                            {server}
-                            {selectedServer === server && <span className="float-right animate-pulse">●</span>}
+                            <span className="flex items-center gap-2">
+                                <span className="text-lg">{server.flag}</span>
+                                <span>{server.name}</span>
+                            </span>
+                            {selectedServer === server.id && <span className="animate-pulse">●</span>}
                         </button>
                     ))}
                 </div>

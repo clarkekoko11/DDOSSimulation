@@ -2,8 +2,6 @@
 
 **L.O.G.I.C** is an advanced, interactive DDoS simulation and visualization tool designed for educational purposes. It demonstrates the dynamics of network attacks, defense mechanisms, and traffic patterns in a visually immersive cyberpunk environment.
 
-![Project Preview](public/preview.png)
-*(Note: Add a screenshot of the dashboard here)*
 
 ## 🚀 Features
 

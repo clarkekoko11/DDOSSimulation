@@ -4,9 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const StatsPanel = ({
     isAttacking,
-    attacks = [],
-    isPinned,       // New prop
-    onTogglePin     // New prop
+    attacks = []
 }) => {
     const [stats, setStats] = useState({
         bandwidth: 0,
@@ -47,19 +45,13 @@ const StatsPanel = ({
 
     return (
         <motion.div
-            drag={!isPinned}
-            dragMomentum={false}
-            dragConstraints={!isPinned ? { left: 0, top: 0, right: window.innerWidth - 320, bottom: window.innerHeight - 100 } : undefined}
-            className={`
-                z-50 w-full rounded-xl overflow-hidden cyber-panel transition-all duration-300 
-                ${isPinned ? 'relative mb-4' : 'absolute bottom-8 right-8 cursor-move ring-1 ring-cyber-cyan/50 shadow-[0_0_30px_rgba(0,240,255,0.3)]'}
-            `}
+            className="z-50 w-full rounded-xl overflow-hidden cyber-panel transition-all duration-300 relative mb-4"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0, width: '100%' }}
         >
             {/* Header */}
             <div
-                className={`p-4 flex items-center justify-between border-b border-cyber-dim/30 bg-black/20 group select-none ${!isPinned ? 'cursor-move' : ''}`}
+                className="p-4 flex items-center justify-between border-b border-cyber-dim/30 bg-black/20 group select-none"
                 style={{ borderColor: 'rgba(0, 240, 255, 0.1)' }}
             >
                 <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-gray-400">
@@ -67,26 +59,15 @@ const StatsPanel = ({
                     Live Metrics
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* Pin Toggle */}
-                    <button
-                        onClick={onTogglePin}
-                        className={`transition-all duration-300 p-1.5 rounded-full hover:bg-white/10 ${isPinned ? 'text-cyber-cyan' : 'text-gray-500'}`}
-                        title={isPinned ? "Unpin to drag" : "Pin position"}
-                    >
-                        <div className={`w-2 h-2 rounded-full transition-all duration-300 ${isPinned ? 'bg-cyber-cyan shadow-[0_0_8px_#00f0ff]' : 'border border-gray-500 bg-transparent'}`} />
-                    </button>
-
                     {isAttacking && (
                         <span className="flex h-2 w-2 relative mr-2">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                         </span>
                     )}
-                    {!isPinned && <GripHorizontal size={16} className="text-gray-400 group-hover:text-cyber-cyan transition-colors" />}
                     <button
                         onClick={() => setIsMinimized(!isMinimized)}
                         className="text-gray-400 hover:text-white transition-colors"
-                        onPointerDownCapture={e => e.stopPropagation()}
                     >
                         {isMinimized ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </button>

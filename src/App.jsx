@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import MapVisualizer from './components/Map/MapVisualizer';
 import ControlPanel from './components/UI/ControlPanel';
 import StatsPanel from './components/UI/StatsPanel';
-import InfoPanel from './components/UI/InfoPanel'; // New Import
+import InfoPanel from './components/UI/InfoPanel';
 import BootScreen from './components/UI/BootScreen';
-import { AnimatePresence } from 'framer-motion';
 
 function App() {
   const [selectedServer, setSelectedServer] = useState(null);
@@ -12,10 +11,6 @@ function App() {
   const [selectedAttackType, setSelectedAttackType] = useState('RANDOM');
   const [attacks, setAttacks] = useState([]);
   const [booting, setBooting] = useState(true);
-
-  // Panel State (Lifted)
-  const [controlPanelPinned, setControlPanelPinned] = useState(true);
-  const [statsPanelPinned, setStatsPanelPinned] = useState(true);
 
   // Attack Configuration
   const ATTACK_TYPES = [
@@ -51,11 +46,12 @@ function App() {
           color: attackConfig.color
         };
 
-        setAttacks(prev => [...prev, newAttack]);
-
-        setTimeout(() => {
-          setAttacks(prev => prev.filter(a => a.id !== id));
-        }, 2000);
+        // Optimized: Batch Add + Cleanup in one state update to reduce re-renders
+        setAttacks(prev => {
+          const now = Date.now();
+          const active = prev.filter(a => now - a.createdAt < 2000); // Remove old
+          return [...active, newAttack]; // Add new
+        });
 
       }, 50);
     } else {
@@ -72,21 +68,17 @@ function App() {
 
       {/* --- LEFT SIDEBAR (Controls) --- */}
       <div
-        className={`h-full z-20 transition-all duration-300 flex flex-col p-4 pt-8 gap-4 ${controlPanelPinned ? 'w-[360px] border-r border-cyber-dim/30 bg-black/20 backdrop-blur-sm' : 'w-0 p-0 overflow-hidden'}`}
+        className="h-full z-20 w-[360px] border-r border-cyber-dim/30 bg-black/20 backdrop-blur-sm flex flex-col p-4 pt-8 gap-4"
       >
-        {controlPanelPinned && (
-          <ControlPanel
-            selectedServer={selectedServer}
-            onSelectServer={setSelectedServer}
-            onToggleAttack={() => setIsAttacking(!isAttacking)}
-            isAttacking={isAttacking}
-            selectedAttackType={selectedAttackType}
-            onSelectAttackType={setSelectedAttackType}
-            attackTypes={ATTACK_TYPES}
-            isPinned={true}
-            onTogglePin={() => setControlPanelPinned(false)}
-          />
-        )}
+        <ControlPanel
+          selectedServer={selectedServer}
+          onSelectServer={setSelectedServer}
+          onToggleAttack={() => setIsAttacking(!isAttacking)}
+          isAttacking={isAttacking}
+          selectedAttackType={selectedAttackType}
+          onSelectAttackType={setSelectedAttackType}
+          attackTypes={ATTACK_TYPES}
+        />
       </div>
 
       {/* --- CENTER (Map) --- */}
@@ -106,60 +98,14 @@ function App() {
         >
           <MapVisualizer selectedServer={selectedServer} attacks={attacks} />
         </div>
-
-        {/* Floating Zones for Unpinned Panels */}
-        {!controlPanelPinned && (
-          <div className="absolute top-0 left-0 z-50 p-8">
-            <ControlPanel
-              selectedServer={selectedServer}
-              onSelectServer={setSelectedServer}
-              onToggleAttack={() => setIsAttacking(!isAttacking)}
-              isAttacking={isAttacking}
-              selectedAttackType={selectedAttackType}
-              onSelectAttackType={setSelectedAttackType}
-              attackTypes={ATTACK_TYPES}
-              isPinned={false}
-              onTogglePin={() => setControlPanelPinned(true)}
-            />
-          </div>
-        )}
-
-        {!statsPanelPinned && (
-          <div className="absolute bottom-0 right-0 z-50 p-8">
-            <StatsPanel
-              isAttacking={isAttacking}
-              attacks={attacks}
-              isPinned={false}
-              onTogglePin={() => setStatsPanelPinned(true)}
-            />
-          </div>
-        )}
       </div>
 
       {/* --- RIGHT SIDEBAR (Info & Stats) --- */}
       <div
-        className={`h-full z-20 transition-all duration-300 flex flex-col p-4 pt-8 gap-4 ${statsPanelPinned ? 'w-[400px] border-l border-cyber-dim/30 bg-black/20 backdrop-blur-sm' : 'w-0 p-0 overflow-hidden'}`}
+        className="h-full z-20 w-[400px] border-l border-cyber-dim/30 bg-black/20 backdrop-blur-sm flex flex-col p-4 pt-8 gap-4"
       >
-        {statsPanelPinned && (
-          <>
-            <StatsPanel
-              isAttacking={isAttacking}
-              attacks={attacks}
-              isPinned={true}
-              onTogglePin={() => setStatsPanelPinned(false)}
-            />
-          </>
-        )}
-
-        {/* Always show Info Panel here if space allows, or allow it to collapse if stats are unpinned? 
-            For now, let's keep InfoPanel in the right sidebar always visible unless customized further.
-            Actually, if Stats is unpinned, the right sidebar closes. Let's make the Sidebar toggle-able independent of Stats?
-            For simplicity: Right sidebar is controlled by StatsPanel pinning. If Stats is unpinned, sidebar closes and InfoPanel hides (or could float).
-            Let's keep InfoPanel tied to the Sidebar for now.
-        */}
-        {statsPanelPinned && (
-          <InfoPanel selectedAttackType={selectedAttackType} />
-        )}
+        <StatsPanel isAttacking={isAttacking} attacks={attacks} />
+        <InfoPanel selectedAttackType={selectedAttackType} />
       </div>
 
     </div>

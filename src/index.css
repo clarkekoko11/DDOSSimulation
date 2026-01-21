@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  background-color: #050510;
+  color: #e0e0e0;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif; /* Setup in index.html later or assume system font */
+  overflow: hidden; /* Prevent scroll */
+}
+
+/* Custom Scrollbar just in case */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a12; 
+}
+::-webkit-scrollbar-thumb {
+  background: #00f0ff; 
+  border-radius: 3px;
+}

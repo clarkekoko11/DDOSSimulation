@@ -19,7 +19,7 @@
 ## 🛠️ Technology Stack
 
 - **Core**: React 18, Vite
-- **Styling**: TailwindCSS, Vanilla CSS (Cyberpunk Theme)
+- **Styling**: TailwindCSS, Vanilla CSS
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
 - **Geo-Visualization**: D3-geo (simulated) / Custom SVG mapping

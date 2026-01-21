@@ -2,68 +2,116 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const BootScreen = ({ onComplete }) => {
+    const [lines, setLines] = useState([]);
     const [step, setStep] = useState(0);
 
+    // Matrix Rain Effect Generator
+    useEffect(() => {
+        const chars = '01ABCDEF';
+        const generateLine = () => Array(Math.floor(Math.random() * 60)).fill(0).map(() => chars[Math.floor(Math.random() * chars.length)]).join(' ');
+
+        const interval = setInterval(() => {
+            setLines(prev => {
+                const newLines = [...prev, generateLine()];
+                if (newLines.length > 20) return newLines.slice(1);
+                return newLines;
+            });
+        }, 50);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // Boot Sequence Timer
     useEffect(() => {
         const sequence = [
-            setTimeout(() => setStep(1), 500),  // Initial Glitch
-            setTimeout(() => setStep(2), 1500), // Show Name
-            setTimeout(() => setStep(3), 3500), // Fade Out
-            setTimeout(() => onComplete(), 4000) // Complete
+            setTimeout(() => setStep(1), 800),   // BIOS
+            setTimeout(() => setStep(2), 1600),  // Kernel
+            setTimeout(() => setStep(3), 2400),  // Network
+            setTimeout(() => setStep(4), 3200),  // Security
+            setTimeout(() => setStep(5), 4000),  // Title Glitch
+            setTimeout(() => setStep(6), 5500),  // Complete
+            setTimeout(onComplete, 6000)
         ];
-        return () => sequence.forEach(cleanup => clearTimeout(cleanup));
+        return () => sequence.forEach(clearTimeout);
     }, [onComplete]);
+
+    const CheckItem = ({ delay, label }) => (
+        <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 font-mono text-sm"
+        >
+            <span className="text-gray-500">[{new Date().toISOString().split('T')[1].slice(0, 8)}]</span>
+            <span className="text-white">{label}</span>
+            <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-cyber-green font-bold"
+            >
+                OK
+            </motion.span>
+        </motion.div>
+    );
 
     return (
         <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-black flex items-center justify-center pointer-events-none"
+            className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center overflow-hidden"
+            exit={{ opacity: 0, scale: 1.1, filter: 'blur(20px)' }}
+            transition={{ duration: 0.8 }}
         >
-            <div className="relative z-10 text-center">
-                <AnimatePresence>
-                    {step >= 1 && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
-                            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                            exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
-                            className="font-mono"
-                        >
-                            <motion.h1
-                                className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tighter"
-                                animate={{ textShadow: ["0 0 0px #fff", "0 0 20px #00f0ff", "0 0 0px #fff"] }}
-                                transition={{ duration: 0.2, repeat: 3 }}
-                            >
-                                SYSTEM BOOT
-                            </motion.h1>
-
-                            {step >= 2 && (
-                                <motion.div
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    className="text-cyber-cyan text-lg md:text-xl tracking-[0.5em] uppercase"
-                                >
-                                    <span className="text-gray-500 text-sm block mb-2 tracking-normal lowercase">made with love by</span>
-                                    Clarke Serrano
-                                </motion.div>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Decorative Loading Bar */}
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-8 w-64 h-1 bg-gray-900 rounded-full overflow-hidden">
-                    <motion.div
-                        className="h-full bg-cyber-cyan shadow-[0_0_10px_#00f0ff]"
-                        initial={{ width: "0%" }}
-                        animate={{ width: "100%" }}
-                        transition={{ duration: 3, ease: "easeInOut" }}
-                    />
-                </div>
+            {/* Background Matrix Rain */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none select-none overflow-hidden">
+                {lines.map((line, i) => (
+                    <div key={i} className="text-[10px] font-mono text-cyber-cyan whitespace-nowrap opacity-50">
+                        {line}
+                    </div>
+                ))}
             </div>
 
-            {/* Matrix/Cyber Background Effect */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,240,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(0,240,255,0.05)_1px,transparent_1px)] bg-[size:20px_20px] opacity-20" />
+            {/* Boot Log Sequence */}
+            <AnimatePresence>
+                {step < 5 && (
+                    <motion.div
+                        className="space-y-1 h-32"
+                        exit={{ opacity: 0, y: -20, filter: 'blur(5px)' }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        {step >= 1 && <CheckItem label="INITIALIZING KERNEL..." />}
+                        {step >= 2 && <CheckItem label="LOADING MODULES: NET_STACK_V3" />}
+                        {step >= 3 && <CheckItem label="ESTABLISHING UPLINK (SECURE)" />}
+                        {step >= 4 && <CheckItem label="BYPASSING FIREWALLS..." />}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Main Title Reveal (Absolute Center) */}
+            <AnimatePresence>
+                {step >= 5 && (
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0, filter: 'blur(10px)' }}
+                        animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
+                        className="absolute inset-0 flex flex-col items-center justify-center z-50 pointer-events-none"
+                    >
+                        <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyber-cyan via-white to-cyber-cyan tracking-tighter animate-pulse">
+                            L.O.G.I.C
+                        </h1>
+                        <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: "100%" }}
+                            className="h-[2px] bg-cyber-cyan mt-4 mx-auto"
+                        />
+                        <p className="mt-4 text-cyber-cyan text-sm tracking-[0.5em] uppercase font-bold">
+                            Layered Overload Generation & Impact Control
+                        </p>
+                        <p className="mt-8 text-gray-500 text-xs font-mono lowercase">
+                            developed by clarke serrano
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            {/* Scanline Overlay */}
+            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_4px,3px_100%] z-20" />
         </motion.div>
     );
 };

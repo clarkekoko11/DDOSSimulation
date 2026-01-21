@@ -2,11 +2,11 @@ import React from 'react';
 import { Shield } from 'lucide-react';
 
 const SERVER_LIST = [
-    { id: "US-East", flag: "🇺🇸", name: "US-East" },
-    { id: "US-West", flag: "🇺🇸", name: "US-West" },
-    { id: "EU-West", flag: "🇪🇺", name: "EU-West" },
-    { id: "Asia-Pac", flag: "🇯🇵", name: "Asia-Pac" },
-    { id: "SA-East", flag: "🇧🇷", name: "SA-East" },
+    { id: "US-East", flag: "https://flagcdn.com/w40/us.png", name: "US-East" },
+    { id: "US-West", flag: "https://flagcdn.com/w40/us.png", name: "US-West" },
+    { id: "EU-West", flag: "https://flagcdn.com/w40/eu.png", name: "EU-West" },
+    { id: "Asia-Pac", flag: "https://flagcdn.com/w40/jp.png", name: "Asia-Pac" },
+    { id: "SA-East", flag: "https://flagcdn.com/w40/br.png", name: "SA-East" },
 ];
 
 const ControlPanel = ({ selectedServer, onSelectServer, onToggleAttack, isAttacking }) => {
@@ -45,7 +45,7 @@ const ControlPanel = ({ selectedServer, onSelectServer, onToggleAttack, isAttack
                             `}
                         >
                             <span className="flex items-center gap-2">
-                                <span className="text-lg">{server.flag}</span>
+                                <img src={server.flag} alt="flag" className="w-5 h-auto rounded-sm opacity-80" />
                                 <span>{server.name}</span>
                             </span>
                             {selectedServer === server.id && <span className="animate-pulse">●</span>}
